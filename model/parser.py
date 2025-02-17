@@ -28,7 +28,6 @@ Please print the final result as brief as possible. If the result is a list, jus
 The example result format are:
 "The release date of the album is 2002-11-03"
 "The id of the person is 12345"
-"The movies directed by Wong Kar-Wai are In the Mood for Love (843), My Blueberry Nights (1989), Chungking Express (11104)"
 Note you should generate only Python code.
 DO NOT use fields that are not in the response schema.
 
