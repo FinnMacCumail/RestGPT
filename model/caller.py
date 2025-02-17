@@ -19,7 +19,9 @@ from langchain_core.runnables import Runnable
 from utils import simplify_json, get_matched_endpoint, ReducedOpenAPISpec, fix_json_error
 from .parser import ResponseParser, SimpleResponseParser
 
-from pydantic import BaseModel 
+from pydantic import BaseModel
+
+from langchain_core.messages import AIMessage
 
 logger = logging.getLogger(__name__)
 
@@ -219,18 +221,20 @@ class Caller(Chain, BaseModel):
 
     #     return action, action_input
 
-    def _get_action_and_input(self, llm_output: Union[str, dict]) -> Tuple[str, str]:
+    def _get_action_and_input(self, llm_output: Union[str, AIMessage]) -> Tuple[str, str]:
         """Extract API operation and input parameters from LLM output."""
         
-        # ✅ Ensure llm_output is a string
-        if isinstance(llm_output, dict):
+        # ✅ Ensure `llm_output` is a string (handle AIMessage case)
+        if isinstance(llm_output, AIMessage):
+            llm_output = llm_output.content.strip()
+        elif isinstance(llm_output, dict):
             llm_output = llm_output.get("result", "").strip()
 
-        if not llm_output:  # ✅ Handle empty LLM output
+        if not llm_output:
             print("⚠️ WARNING: LLM output is empty or invalid.")
             raise ValueError("Error: LLM output is empty or invalid.")
 
-        # 🔍 Debugging print
+        # ✅ Debugging print to verify format
         print(f"DEBUG: LLM Output Received: {llm_output}")
 
         if "Execution Result:" in llm_output:
@@ -241,8 +245,8 @@ class Caller(Chain, BaseModel):
         match = re.search(regex, llm_output, re.DOTALL)
 
         if not match:
-            print(f"❌ ERROR: Could not parse LLM output: {llm_output}")  # Debug print
-            raise ValueError(f"Could not parse LLM output: {llm_output}")
+            print(f"❌ ERROR: Could not parse LLM output: `{llm_output}`")  # Debug print
+            raise ValueError(f"Could not parse LLM output: `{llm_output}`")
 
         action = match.group(1).strip()
         action_input = match.group(2)
@@ -250,11 +254,7 @@ class Caller(Chain, BaseModel):
         if action not in ["GET", "POST", "DELETE", "PUT"]:
             raise NotImplementedError(f"Unsupported API operation: {action}")
 
-        # ✅ Ensure valid JSON input format
-        action_input = fix_json_error(action_input)
-
         return action, action_input
-
 
     
     def _get_response(self, action: str, action_input: str) -> str:
@@ -266,6 +266,9 @@ class Caller(Chain, BaseModel):
             data = json.loads(action_input)
         except json.JSONDecodeError as e:
             raise e
+        
+         # ✅ Debug print entire JSON response
+        print(f"DEBUG: Full API Response:\n{json.dumps(data, indent=2)}")
         
         desc = data.get("description", "No description")
         query = data.get("output_instructions", None)
