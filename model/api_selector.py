@@ -28,6 +28,14 @@ User query: what is the id of album Kind of Blue.
 API calling 1: GET /search to search for the album "Kind of Blue"
 API response: Kind of Blue's album_id is 1weenld61qoidwYuZ1GESA
 ...
+""",
+"netbox": """Example 1:
+Background: The id of a device is 42.
+User query: List all devices in NetBox.
+API calling 1: GET /dcim/devices/ to list all devices.
+API response: A list of devices including Device A (id: 42), Device B (id: 43), ...
+Thought: I have retrieved the list of devices.
+Final Answer: NetBox has 2 devices: Device A and Device B.
 """
 }
 
@@ -165,13 +173,27 @@ class APISelector(Runnable):
         return collection
 
     def retrieve_api_docs(self, query: str, top_k: int = 3) -> str:
-        """Retrieve relevant API documentation from ChromaDB (NetBox only)."""
+        """Retrieve relevant API documentation using semantic search in ChromaDB (NetBox only)."""
         if not self.vector_db:
             return ""
-        query_embedding = self.embedder.encode(query).tolist()
-        search_results = self.vector_db.query(query_embeddings=[query_embedding], n_results=top_k)
+        
+        # Ensure query is a list of strings.
+        if isinstance(query, str):
+            query = [query]
+        elif not isinstance(query, list):
+            query = list(query)
+        
+        # Debug: print the query and its type.
+        print("DEBUG: Query for encoding:", query, type(query))
+        
+        # Also, ensure that the list is not empty.
+        if not query or query[0] == "":
+            raise ValueError("Query is empty or invalid.")
+        
+        query_embedding = self.embedder.encode(query, show_progress_bar=False).tolist()
+        search_results = self.vector_db.query(query_embeddings=query_embedding, n_results=top_k)
         retrieved_docs = []
-        for result in search_results["metadatas"][0]:
+        for result in search_results["metadatas"][0]:  # Iterate through top_k results
             doc_text = f"{result['method']} {result['path']} - {result['description']}"
             retrieved_docs.append(doc_text)
         return "\n".join(retrieved_docs)
