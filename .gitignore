@@ -2,4 +2,4 @@ config.yaml
 venv/
 __pycache__/
 *.pyc
-db/
+chroma_db/
