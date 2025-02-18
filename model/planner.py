@@ -53,6 +53,14 @@ Plan step 5: Add the most popular songs by Coldplay, Yellow (3AJwUDP919kvQ9QcozQ
 API response: Successfully called POST /playlists/7LjHVU3t3fcxj5aiPFEW4T/tracks to add Yellow (3AJwUDP919kvQ9QcozQPxg), Viva La Vida (1mea3bSkSGXuIRvnydlB5b) in playlist "Love Coldplay" (7LjHVU3t3fcxj5aiPFEW4T). The playlist id is 7LjHVU3t3fcxj5aiPFEW4T.
 Thought: I am finished executing a plan and have the data the used asked to create
 Final Answer: I have made a new playlist called "Love Coldplay" containing Yellow and Viva La Vida by Coldplay.
+""",
+"netbox": """Example 1:
+Background: The id of a device is 42.
+User query: List all devices in NetBox.
+Plan step 1: GET /dcim/devices/ to retrieve the list of devices.
+API response: The API returned a list of devices, e.g., Device A (id: 42), Device B (id: 43).
+Thought: I have successfully retrieved the device list.
+Final Answer: NetBox has 2 devices: Device A and Device B.
 """
 }
 
@@ -65,7 +73,7 @@ If you think you have got the final answer or the user query has been fulfilled,
 In most case, search, filter, and sort should be completed in a single step.
 The plan should be as specific as possible. It is better not to use pronouns in plan, but to use the corresponding results obtained previously. For example, instead of "Get the most popular movie directed by this person", you should output "Get the most popular movie directed by Martin Scorsese (1032)". If you want to iteratively query something about items in a list, then the list and the elements in the list should also appear in your plan.
 The plan should be straightforward. If you want to search, sort or filter, you can put the condition in your plan. For example, if the query is "Who is the lead actor of In the Mood for Love (id 843)", instead of "get the list of actors of In the Mood for Love", you should output "get the lead actor of In the Mood for Love (843)".
-
+When the query is related to NetBox, remember that endpoints typically start with /dcim/ or /ipam/ and return device or IP data.
 Starting below, you should follow this format:
 
 User query: the query a User wants help with related to the API.
