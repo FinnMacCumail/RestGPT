@@ -52,8 +52,10 @@ class RestGPT(Chain):
         if scenario in ['TMDB', 'Tmdb']:
             scenario = 'tmdb'
         if scenario in ['Spotify']:
-            scenario = 'spotify' 
-        if scenario not in ['tmdb', 'spotify']:
+            scenario = 'spotify'
+        if scenario in ['NetBox']:
+            scenario = 'netbox'
+        if scenario not in ['tmdb', 'spotify', 'netbox']:
             raise ValueError(f"Invalid scenario {scenario}")
         
         planner = Planner(llm=llm, scenario=scenario)
