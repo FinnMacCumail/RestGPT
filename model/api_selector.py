@@ -156,11 +156,28 @@ class APISelector(Runnable):
         return docs          
 
     def store_api_docs_in_chroma(self) -> Any:
-        """Store NetBox API docs in ChromaDB for vector-based retrieval."""
+        """Store NetBox API docs in ChromaDB for vector-based retrieval,
+        reusing an existing collection if available to improve efficiency."""
         if self.scenario != "netbox":
             return None
+
+        # Create or load a persistent ChromaDB client.
         chroma_client = chromadb.PersistentClient(path="./chroma_db")
         collection = chroma_client.get_or_create_collection(name="netbox_api")
+        
+        # Check if the collection already has documents.
+        try:
+            existing_docs = collection.get()
+        except Exception as e:
+            logger.error(f"Error checking existing collection: {e}")
+            existing_docs = None
+
+        if existing_docs and "ids" in existing_docs and len(existing_docs["ids"]) > 0:
+            logger.info(f"ChromaDB collection 'netbox_api' already exists with {len(existing_docs['ids'])} documents. Reusing existing embeddings.")
+            return collection
+
+        # If the collection is empty, embed and add API docs.
+        logger.info("Embedding NetBox API documentation into ChromaDB...")
         for path, details in self.api_docs.items():
             for method, metadata in details.items():
                 doc_text = f"{method.upper()} {path} - {metadata.get('description', '')}"
@@ -170,7 +187,9 @@ class APISelector(Runnable):
                     embeddings=[embedding],
                     metadatas=[{"method": method.upper(), "path": path, "description": metadata.get('description', '')}]
                 )
+        logger.info("Finished embedding API documentation.")
         return collection
+
 
     def retrieve_api_docs(self, query: str, top_k: int = 3) -> str:
         """Retrieve relevant API documentation using semantic search in ChromaDB (NetBox only)."""

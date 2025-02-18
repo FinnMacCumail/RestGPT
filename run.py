@@ -29,6 +29,11 @@ def main():
     )
     logger.setLevel(logging.INFO)
 
+    # Set the logging level for ChromaDB and related submodules to ERROR.
+    logging.getLogger("chromadb").setLevel(logging.ERROR)
+    logging.getLogger("chromadb.client").setLevel(logging.ERROR)
+    logging.getLogger("chromadb.utils").setLevel(logging.ERROR)
+
     # Updated prompt to support NetBox as well
     scenario = input("Please select a scenario (TMDB/Spotify/NetBox): ").strip().lower()
 
